@@ -1,0 +1,6 @@
+data/annotations
+data/images
+data/label
+data/labels_color
+
+*/__pycache__
