@@ -3,4 +3,11 @@ data/images
 data/label
 data/labels_color
 
+out/
+
 */__pycache__
+
+*.jpg
+*.png
+*.mp4
+*.avi
