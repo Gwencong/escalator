@@ -1,0 +1,4 @@
+data/
+custom_kpts/
+__pycache__/
+utils/__pycache__/
