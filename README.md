@@ -38,7 +38,7 @@ python split.py \
 # --split:          训练：验证：测试 的划分比例
 ```
 
-准备完数据集后，custom_kpts目录如下
+经过上述步骤后，custom_kpts目录如下
 ```
 ...
 --custom_kpts
@@ -55,6 +55,7 @@ python split.py \
     |--labels           # Yolo-Pose格式的label文件  
     |    |---image1.txt
     |    |---image2.txt
+    |    |---...
     |    
     |--train.txt        # 训练集文件
     |--test.txt         # 测试集文件
