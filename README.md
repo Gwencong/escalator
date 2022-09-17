@@ -62,3 +62,9 @@ python split.py \
     |--val.txt          # 验证集文件
 ...
 ```
+
+## 其他
+合并json文件为COCO格式: 
+```
+python json2coco.py --json_dir custom_kpts/annotations --save_file data/all.json
+```
