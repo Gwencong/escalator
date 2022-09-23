@@ -4,7 +4,7 @@ export CUDA_VISIBLE_DEVICES=0
 python export.py \
         --config escalator/configs/fcn/fcn_hrnetw18_custom_1024x512_80k.yml  \
         --model_path escalator/out/train/fcn_hrnetw18/best_model/model.pdparams \
-        --save_dir out/export/fcn_hrnetw18 \
+        --save_dir escalator/out/export/fcn_hrnetw18 \
         --without_argmax \
         --with_softmax \
         --input_shape 1 3 720 1280
