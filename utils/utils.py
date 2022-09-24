@@ -225,6 +225,40 @@ def visual_image_yolo_format(img_dir="coco_kpts/images",anno_dir="coco_kpts/labe
     cv2.waitKey(0)
     return img
 
+def visual_label_yolo_format(label_files,save_dir=''):
+    for label_file in tqdm(label_files,desc='Visualization'):
+        path_img = Path(label_file)
+        path_anno = Path(str(path_img.with_suffix('.txt')).replace('images','labels'))
+        img = cv2.imdecode(np.fromfile(path_img.__str__(),dtype=np.uint8),-1)
+        assert img is not None,f'open img from file {path_img.__str__()} failed.'
+        h,w = img.shape[:2]
+        colors = np.random.randint(0,255,(50,3)).tolist()
+        with open(path_anno.__str__(),'r') as f:
+            for idx,line in enumerate(f.readlines()):
+                line = line.strip()
+                line = line.split(' ')
+                label = line[0]
+                box = np.array([float(i) for i in line[1:5]])
+                xyxy = box
+                
+                xyxy[[0,2]] = box[[0,2]]*w
+                xyxy[[1,3]] = box[[1,3]]*h
+                xyxy[:2] = xyxy[:2]-xyxy[2:]/2
+                xyxy[2:] = xyxy[:2]+xyxy[2:]
+                        
+                
+                kpts = np.array([float(i) for i in line[5:]]).reshape(17,3)
+                kpts[:,0] = kpts[:,0] * w
+                kpts[:,1] = kpts[:,1] * h
+
+                # plot_box(img,xyxy,idx)
+                # plot_kpts(img,kpts,colors[idx])
+                plot_one_box(xyxy,img,label=f' person-{idx}',color=(255,0,0),kpt_label=True,kpts=kpts.reshape(-1),steps=3)
+        save_file = os.path.join(save_dir,path_img.name)
+        cv2.imwrite(save_file,img)
+    return img
+
+
 def copy_data(src_dir,dst_dir,prefix='action_',postfix=''):
     # copy img
     for src_img_file in tqdm(glob.glob(os.path.join(src_dir,'*.jpg')), desc='copy data'):
@@ -351,6 +385,22 @@ def Json2YOLO(json_dir,label_dir=None):
                     file.write(('%g ' * len(line)).rstrip() % line + '\n')
     print('lack box file: {}'.format(len(lack_box_file)))
     print('json to yolo completed.')
+
+def Extra_equivalent(txtfile,extract_num):
+    print(f'Extract {extract_num} files from {txtfile}...')
+    with open(txtfile,'r',encoding='utf-8') as f:
+        img_all_list = f.readlines()
+    if extract_num>len(img_all_list):
+        print(f'expect number is {extract_num}, but get {len(img_all_list)}')
+        extract_num = len(img_all_list)
+    img_list = img_all_list[:extract_num]
+
+    savefile = txtfile.replace('.txt','-equiv.txt')
+    with open(savefile,'w',encoding='utf-8') as f:
+        for img_path in tqdm(img_list):
+            f.write(img_path)
+    print(f'Extracted file has been saved in {savefile}')
+
 
 if __name__ == "__main__":
     json_dir = r'D:\my file\project\扶梯项目\训练数据\姿态估计\annotations'
