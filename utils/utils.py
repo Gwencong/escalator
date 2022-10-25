@@ -1,3 +1,4 @@
+from genericpath import isfile
 import os
 import cv2
 import json
@@ -284,15 +285,30 @@ def check_rate(file):
     print('without action label: {}\nwith action label:{}\n'.format(kpt_num,action_num))
 
 
-def MergeJson(json_dir,save_file='data/all.json'):
+def MergeJson(json_dir,save_file='data/all.json',area_weight=0.6):
     lack_box_file = []
 
     new_data = dict(info=info,licenses=licenses,images=images,annotations=annotations,categories=categories)
     image_id = 0
     anno_id = 0
-    json_file = os.path.join(json_dir,'*.json')
-    for path in tqdm(glob.glob(json_file),desc='Merge json files to one file'):
+    if os.path.isfile(json_dir):
+        dir_name = os.path.dirname(json_dir)
+        json_files = []
+        with open(json_dir) as f:
+            for line in f.readlines():
+                line = line.strip().replace('images','annotations').replace('.jpg','.json')
+                json_file = os.path.join(dir_name,line)
+                if os.path.exists(json_file):
+                    json_files.append(json_file)
+                else:
+                    print(f'annotation file `{json_file}` not found')
+    else:
+        json_file = os.path.join(json_dir,'*.json')
+        json_files = glob.glob(json_file)
+    
+    for path in tqdm(json_files,desc='Merge json files to one file'):
         file_id = os.path.basename(path).replace('.json','')
+        image_id = file_id
         img_file = path.replace('annotations','images').replace('.json','.jpg')
         assert os.path.exists(img_file),f'file not found: `{img_file}`'
         img = cv2.imdecode(np.fromfile(img_file,dtype=np.uint8),-1)
@@ -308,7 +324,7 @@ def MergeJson(json_dir,save_file='data/all.json'):
                     print('\n',path)
                 bbox = [round(coord,2) for coord in bbox]
                 num_kpt = int(np.count_nonzero(np.array(kpts))/2)
-                area = round(bbox[2]*bbox[3],4)
+                area = round(bbox[2]*bbox[3]*area_weight,4)
                 pts = np.array(kpts).reshape(17,2)
                 vis_flag = np.where(np.bitwise_and(pts[:,0:1]==0 , pts[:,1:2]==0),0,2)
                 kpts = np.concatenate([pts,vis_flag],axis=-1).reshape(-1)
@@ -333,7 +349,8 @@ def MergeJson(json_dir,save_file='data/all.json'):
                             "id": anno_id}
                 new_data['annotations'].append(anno_info)
                 anno_id += 1
-        image_id += 1
+        # image_id += 1
+    Path(save_file).parent.mkdir(parents=True,exist_ok=True)
     with open(save_file,'w',encoding='utf-8') as f:
         json.dump(new_data,f,ensure_ascii=False,indent=2)
     print('lack box file: {}'.format(len(lack_box_file)))
